@@ -17,14 +17,6 @@ sns.set_style("whitegrid")
 
 from metrics import compute_metrics
 
-"""
-METRIC_COLORMAP = {
-    "first_np": "#ff7f0e",
-    "second_np": "#2ca02c",
-    "second_np_no_pp": "#d62728"
-}
-"""
-
 MODEL_NAME_MAP = {
     "t5": "T5",
     "mt5": "mT5",
@@ -46,7 +38,7 @@ def get_dirs(prefixes, suffixes):
     return dirs
 
 
-ABLATION_NAME_MAP = lambda x: f"({x})"
+ABLATION_NAME_MAP = lambda x: x.upper()
 
 def main():
       argparser = argparse.ArgumentParser()
@@ -64,10 +56,6 @@ def main():
       argparser.add_argument("--out_dir", default="scaling")    
       args = argparser.parse_args()
 
-      # if "," in args.checkpoint_dirs:
-      #     checkpoint_dirs = args.checkpoint_dirs.split(",")
-      # else:
-      #     checkpoint_dirs = [args.checkpoint_dirs]
       if "," in args.prefix:
           prefix = args.prefix.split(",")
       else:
@@ -84,6 +72,7 @@ def main():
       metrics_str = "-".join(metric_names)
       basename = os.path.basename(args.gold_filename).replace(".json", "")
       params = {}
+      ablation_type = {}
       for checkpoint_dir in checkpoint_dirs:
         # check for ablations in name of model
         dirname = os.path.basename(checkpoint_dir)
@@ -102,12 +91,18 @@ def main():
         # get model name for annotations
         model_name = model_name.split("/")[-1]
         if is_ablation:
-            model_prefix = MODEL_NAME_MAP[model_name]
+            # make FF labels more precise -- these are named imprecisely on HF
+            if second_feature == "ff1000":
+                second_feature = "ff1024"
+            elif second_feature == "ff2000":
+                second_feature = "ff2048"
             model_ablation = ABLATION_NAME_MAP(second_feature)
-            model_name = f"{model_prefix} {model_ablation}" 
+            model_name = model_ablation
+            ablation_type[model_name] = model_name[:2]
         else:
-            model_prefix = MODEL_NAME_MAP[model_name]
-            model_name = f"{model_prefix} ({model_size})"
+            model_ablation = "_None"
+            model_name = f"T5-{model_size}"
+            ablation_type[model_name] = "_None"
 
 
         # get num parameters in model
@@ -148,33 +143,29 @@ def main():
       index_names = {"level_0":"Model", "level_1":"Checkpoint"}
       df.rename(columns={**index_names, **metric_rename},
               inplace=True)
+        
       df['Parameters'] = df.apply(lambda row: params[row['Model']], axis=1)
+      df['Component'] = df.apply(lambda row: ablation_type[row['Model']], axis=1)
 
-      df = df.melt(id_vars=['Model', 'Checkpoint', 'Parameters'],
+      df = df.melt(id_vars=['Model', 'Checkpoint', 'Parameters', 'Component'],
                         value_vars=metric_rename.values(),
                         var_name='Metric', value_name='Accuracy')
+      print("Pre-grouping")
+      print(df)
       # Average over checkpoints for the same model and metric
       if args.max:
           df = df.groupby(['Model', 'Metric']).max().reset_index()
       else:
-          df = df.groupby(['Model', 'Metric']).mean().reset_index()
+          df = df.groupby(['Model', 'Component', 'Metric']).mean().reset_index()
+
+      print("Post-grouping")
+      print(df)
 
       alpha = .6
 
-      # Make scatterplot
-      sns.set_palette("bright")
-      # f, ax = plt.subplots(figsize=(7, 7))
-      # ax.set(xscale="log", yscale="log")
-      if "passiv" in args.gold_filename:
-        hue_order = ['sequence', 'object']
-      else:
-        hue_order = ['sequence', 'main aux']
-      ax = sns.scatterplot(x="Parameters", y="Accuracy", hue="Metric", data=df, 
-                           hue_order=hue_order)
-      # Use log x-scale
-
-      # ax.set_xticklabels(ax.get_xticks(), rotation=35)
-
+      palette = ["#33A02C", "#E31A1C", "#CAB2D6", "#1F77B4", "#BCBD22", "#000000"]
+      ax = sns.scatterplot(x="Parameters", y="Accuracy", style="Component", hue="Component",
+                           palette=sns.color_palette(palette, 6), s=50, data=df)
       #handles, labels = ax.get_legend_handles_labels()
       if not args.move_legend and not args.move_legend_left:
         loc = "lower right"
@@ -182,21 +173,14 @@ def main():
         loc = "center right"
       elif args.move_legend_left:
         loc = "center left"
-      #plt.legend(handles[:2], labels[:2], loc=loc)
       plt.ylim([-0.05, 1.05])
       plt.xlim([min(df['Parameters']) - 0.05*max(df['Parameters']), 1.05 * max(df['Parameters'])])
       # label points on the plot
       if args.label_points:
           for x, y, metric, model in zip(df['Parameters'], df['Accuracy'], df['Metric'], df['Model']):
-              color = 'blue' if metric == 'sequence' else 'orange'
-              plt.text(x = x+(.015 * 10**8), y = y+.02, s = model, fontsize=8, color=color)
-
-      # x = df['Parameters']
-      # xmin_pow = math.floor(math.log10(min(x)))
-      # xmax_pow = math.ceil(math.log10(max(x)))
-      # x_ticks = [10**i for i in range(xmin_pow, xmax_pow + 1)]
-      # ax.set_xticks(x_ticks)
-      # ax.set_xticklabels([str(i) for i in x_ticks])
+              color = 'black'
+              y_text_offset = -0.035 if model in ("NL8", "DM256", "FF1000") else 0.0175
+              plt.text(x = x+(.0175 * 10**8), y = y + y_text_offset, s = model, fontsize=12, color=color)
 
       # Automatically get title of graph
       if "passiv_en_nps/" in args.gold_filename:
@@ -226,7 +210,7 @@ def main():
       # Save figure
       if not os.path.exists(args.out_dir):
         os.makedirs(args.out_dir)
-      plt.savefig(os.path.join(args.out_dir, basename + "." + metrics_str + ".scaling.pdf"),
+      plt.savefig(os.path.join(args.out_dir, basename + "." + metrics_str + "all_components_shapes.pdf"),
               format='pdf', bbox_inches='tight')
 
 if __name__ == '__main__':
