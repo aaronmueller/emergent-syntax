@@ -20,7 +20,7 @@ For Wikipedia data, we download [Wikipedia dumps](https://dumps.wikimedia.org) a
 For C4 data, we use the huggingface version of the dataset. We iteratively save data in streaming mode to avoid loading the entire dataset, which may not fit into memory. We save data until we have approximately 1B words (after word tokenization with `nltk`), then use Huebner's script as before to subsample this into 100M, 10M, and 1M word datasets.
 
 ## Fine-tuning
-We very slightly adapt [code from Mueller et al. (2022)](https://github.com/sebschu/multilingual-transformations) to fine-tune our models, as well as existing T5 models on huggingface from [Tay et al. (2022)](https://arxiv.org/abs/2109.10686). These are provided in the `scripts` directory.
+We very slightly adapt [code from Mueller et al. (2022)](https://github.com/sebschu/multilingual-transformations) to fine-tune our models, as well as existing T5 models on huggingface from [Tay et al. (2022)](https://arxiv.org/abs/2109.10686). These are provided in the `scripts` directory. For the syntactic transformations data, clone [this repository](https://github.com/sebschu/multilingual-transformations) and copy the `data` folder into the root folder of this repository.
 
 To fine-tune models, run this script:
 TODO
