@@ -16,10 +16,11 @@ python ../models/run_seq2seq.py \
     --task translation_src_to_tgt \
     --train_file ../data/question_have-havent_en/question_have.train.json \
     --validation_file ../data/question_have-havent_en/question_have.dev.json \
-    --output_dir /scratch/am12057/t5-$1-mccoy-finetuning-question-have-bs128/  \
+    --output_dir /scratch/am12057/t5-$1-seed$2-mccoy-finetuning-question-have-bs128/  \
     --per_device_train_batch_size=64 \
     --gradient_accumulation_steps=2 \
     --per_device_eval_batch_size=16 \
     --overwrite_output_dir \
     --predict_with_generate \
-    --num_train_epochs 10.0
+    --num_train_epochs 10.0 \
+	--seed $2
