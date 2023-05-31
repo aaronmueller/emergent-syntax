@@ -1,5 +1,5 @@
-# How to Plant Trees in Language Models
-This repository provides code for our ACL 2023 paper, "How to Plant Trees in Language Models: Data and Architectural Effects on the Emergence of Syntactic Inductive Biases."
+# How to Plant Trees 🌳 in Language Models
+This repository provides code for our ACL 2023 paper, "How to Plant Trees 🌳 in Language Models: Data and Architectural Effects on the Emergence of Syntactic Inductive Biases."
 
 ## Requirements
 We use python3.8.5.
