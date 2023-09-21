@@ -64,6 +64,7 @@ And to evaluate, run these:
 ```
 
 ## Citation
+```
 @inproceedings{mueller-linzen-2023-plant,
     title = "How to Plant Trees in Language Models: Data and Architectural Effects on the Emergence of Syntactic Inductive Biases",
     author = "Mueller, Aaron  and
@@ -77,6 +78,7 @@ And to evaluate, run these:
     doi = "10.18653/v1/2023.acl-long.629",
     pages = "11237--11252"
 }
+```
 
 ## License
 This repository is made available under an MIT license.
