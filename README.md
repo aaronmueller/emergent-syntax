@@ -64,7 +64,19 @@ And to evaluate, run these:
 ```
 
 ## Citation
-TODO
+@inproceedings{mueller-linzen-2023-plant,
+    title = "How to Plant Trees in Language Models: Data and Architectural Effects on the Emergence of Syntactic Inductive Biases",
+    author = "Mueller, Aaron  and
+      Linzen, Tal",
+    booktitle = "Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+    month = jul,
+    year = "2023",
+    address = "Toronto, Canada",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2023.acl-long.629",
+    doi = "10.18653/v1/2023.acl-long.629",
+    pages = "11237--11252"
+}
 
 ## License
 This repository is made available under an MIT license.
